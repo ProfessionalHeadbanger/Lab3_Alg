@@ -10,83 +10,81 @@
 #include <iostream>
 #include "Graph.h"
 #include <fstream>
+#include <vector>
+#include <string>
 using namespace std;
 
 int step;
-int sw;
+vector <string> cycles;
 
-void DSF(int** arr, int size, bool* flag, int in, int start, int& count_cycles)
+bool check(string current)
+{
+	bool result = true;
+	for (int i = 0; i < cycles.size(); i++)
+	{
+		reverse(current.begin(), current.end());
+		for (int j = 0; j < current.size(); j++)
+		{
+			rotate(current.begin(), current.begin() + (current.length() - 1), current.end());
+			if (current == cycles[i])
+			{
+				result = false;
+			}
+		}
+		reverse(current.begin(), current.end());
+		for (int j = 0; j < current.size(); j++)
+		{
+			rotate(current.begin(), current.begin() + (current.length() - 1), current.end());
+			if (current == cycles[i])
+			{
+				result = false;
+			}
+		}
+	}
+	return result;
+}
+
+void DSF(int** arr, int size, bool* flag, int in, int start, string& current)
 {
 	step++;
-	cout << in + 1 << "/" << step << " ";
+	current += to_string(in + 1);
 	flag[in] = true;
-	if (step == 3 && !sw)
+	if (arr[in][start] == 1 && step > 2)
 	{
-		flag[start] = false;
-		sw++;
-	}
-	if (step > 3 && in == start)
-	{
-		count_cycles++;
+		if (check(current))
+		{
+			cycles.push_back(current);
+		}
 	}
 	for (int i = 0; i < size; i++)
 	{
 		if (!flag[i] && arr[in][i] == 1)
 		{
-			DSF(arr, size, flag, i, start, count_cycles);
+			DSF(arr, size, flag, i, start, current);
+			current.pop_back();
 		}
 	}
+	flag[in] = false;
 	step--;
 }
 
-//int SearchCycles(Graph& graph)
-//{
-//	int n = graph.getsize();
-//	bool* flag = new bool[n];
-//	int count_cycles = 0;
-//	for (int i = 0; i < n; i++)
-//	{
-//		for (int j = 0; j < n; j++)
-//		{
-//			flag[j] = false;
-//		}
-//		step = 0;
-//		if (!flag[i])
-//		{
-//			DSF(graph.getmatrix(), n, flag, i, i, count_cycles);
-//		}
-//	}
-//	return count_cycles;
-//}
-
-int SearchCycles(Graph& graph)
+void SearchCycles(Graph& graph)
 {
 	int n = graph.getsize();
 	bool* flag = new bool[n];
-	int count_cycles = 0;
 	for (int i = 0; i < n; i++)
 	{
-		int** new_graph = graph.getmatrix();
 		for (int j = 0; j < n; j++)
 		{
-			for (int k = 0; k < n; k++)
-			{
-				flag[k] = false;
-			}
-			if (new_graph[i][j])
-			{
-				new_graph[i][j] = 0;
-				new_graph[j][i] = 0;
-				step = 0;
-				sw = 0;
-				DSF(new_graph, n, flag, i, i, count_cycles);
-				new_graph[i][j] = 1;
-				new_graph[j][i] = 1;
-				cout << endl;
-			}
+			flag[j] = false;
+		}
+		step = 0;
+		string current;
+		if (!flag[i])
+		{
+			DSF(graph.getmatrix(), n, flag, i, i, current);
 		}
 	}
-	return count_cycles;
 }
 
 int main()
@@ -102,5 +100,15 @@ int main()
 		g.add_edge(first - 1, second - 1);
 	}
 
-	cout << endl << SearchCycles(g);
+	SearchCycles(g);
+
+	
+
+	cout << "Count of cycles: " << cycles.size() << endl;
+
+	cout << endl << "Cycles: " << endl;
+	for (int i = 0; i < cycles.size(); i++)
+	{
+		cout << cycles[i] << endl;
+	}
 }
